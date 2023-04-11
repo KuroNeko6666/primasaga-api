@@ -14,5 +14,4 @@ func Post(app *fiber.App) {
 	app.Post("/api/client/post/comment", handler.Comment)
 	app.Delete("/api/client/post/comment", handler.DeleteComment)
 	app.Post("/api/client/post/sub-comment", handler.SubComment)
-
 }

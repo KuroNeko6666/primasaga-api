@@ -25,13 +25,34 @@ func ExtractClaims(tokenStr string, secretStr string) (jwt.MapClaims, error) {
 	}
 }
 
-func GenerateToken(user model.User, secret string) (string, error) {
+func GenerateTokenVerification(user model.User, secret string) (string, error) {
 
 	claims := jwt.MapClaims{
 		"id":       user.ID,
 		"username": user.Username,
 		"role":     user.Role,
 		"exp":      time.Now().Add(time.Hour * 72).Unix(),
+	}
+
+	rawToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	token, err := rawToken.SignedString([]byte(secret))
+
+	if err != nil {
+		return "", err
+	}
+
+	return token, err
+
+}
+
+func GenerateTokenLogin(user model.User, sid, secret string) (string, error) {
+
+	claims := jwt.MapClaims{
+		"id":       sid,
+		"user_id":  user.ID,
+		"username": user.Username,
+		"role":     user.Role,
 	}
 
 	rawToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

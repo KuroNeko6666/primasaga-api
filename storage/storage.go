@@ -7,9 +7,11 @@ import (
 )
 
 func ConnectStorage() (*minio.Client, error) {
-	endpoint := "localhost:9090"
-	accessKeyID := "LcEP4PU3l0kNEUz2"
-	secretAccessKey := "9k9R56kSZuNWIms0yisBX7D6uK6tTCEU"
+	endpoint := "localhost:9000"
+	// accessKeyID := "LcEP4PU3l0kNEUz2"
+	// secretAccessKey := "9k9R56kSZuNWIms0yisBX7D6uK6tTCEU"
+	accessKeyID := "UZUrFoaCeGXBQReR"                     // delete this soon
+	secretAccessKey := "YWw6Y269d1soa1qxwPLGLAKMHL1PAKiT" // delete this soon
 	ssl := false
 
 	minioClient, err := minio.New(endpoint, accessKeyID, secretAccessKey, ssl)

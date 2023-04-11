@@ -9,6 +9,7 @@ const (
 	RES_UNAUTHORIZED    = "unauthorized"
 	RES_LOGIN_FAIL      = "email, username, or password is wrong!"
 	RES_ERR_ACCESS      = "you do not have access to make changes"
+	RES_MISSING_AUTH    = "header authorization is missing"
 
 	RES_FINE        = "all is fine"
 	RES_LOGOUT      = "logged out successfully"

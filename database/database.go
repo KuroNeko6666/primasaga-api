@@ -16,6 +16,7 @@ func DBConnect() {
 	DB, err = gorm.Open(mysql.Open(config.DATABASE_DSN), &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
+		// Logger:                 logger.Default.LogMode(logger.Info),
 	})
 
 	if err != nil {

@@ -76,6 +76,7 @@ func Login(ctx *fiber.Ctx) error {
 
 	if db.RowsAffected > 0 {
 		session.ExpiredAt = time.Now().Add(time.Hour * 72)
+		session.UserID = user.ID
 		db := db.Model(&model.Session{}).Updates(&session)
 		if db.Error != nil {
 			return ctx.Status(http.StatusConflict).JSON(response.Message{
@@ -83,14 +84,23 @@ func Login(ctx *fiber.Ctx) error {
 			})
 		}
 
-		ctx.Cookie(&fiber.Cookie{
-			Name:  "session_id",
-			Value: session.ID,
-		})
+		// ctx.Cookie(&fiber.Cookie{
+		// 	Name:  "session_id",
+		// 	Value: session.ID,
+		// })
 
+		token, err := helper.GenerateTokenLogin(user, session.ID, config.SECRET_AUTH)
+		if err != nil {
+			return ctx.Status(http.StatusConflict).JSON(response.Message{
+				Message: err.Error(),
+			})
+		}
 		return ctx.Status(http.StatusOK).JSON(response.Base{
 			Message: "has logged in",
-			Data:    user,
+			Data: map[string]interface{}{
+				"user":  user,
+				"token": token,
+			},
 		})
 	}
 
@@ -106,14 +116,23 @@ func Login(ctx *fiber.Ctx) error {
 		})
 	}
 
-	ctx.Cookie(&fiber.Cookie{
-		Name:  "session_id",
-		Value: session.ID,
-	})
+	// ctx.Cookie(&fiber.Cookie{
+	// 	Name:  "session_id",
+	// 	Value: session.ID,
+	// })
 
+	token, err := helper.GenerateTokenLogin(user, session.ID, config.SECRET_AUTH)
+	if err != nil {
+		return ctx.Status(http.StatusConflict).JSON(response.Message{
+			Message: err.Error(),
+		})
+	}
 	return ctx.Status(http.StatusOK).JSON(response.Base{
 		Message: config.RES_LOGIN,
-		Data:    user,
+		Data: map[string]interface{}{
+			"user":  user,
+			"token": token,
+		},
 	})
 
 }
@@ -157,7 +176,7 @@ func Register(ctx *fiber.Ctx) error {
 		})
 	}
 
-	token, r := helper.GenerateToken(user, config.SECRET_VERIFIY)
+	token, r := helper.GenerateTokenVerification(user, config.SECRET_VERIFIY)
 
 	if r != nil {
 		log.Panic(r.Error())
@@ -176,22 +195,27 @@ func Register(ctx *fiber.Ctx) error {
 func Logout(ctx *fiber.Ctx) error {
 	var session model.Session
 
-	expiredAt := time.Now().Add(time.Second * -1)
-	sessionID := ctx.Cookies("session_id", "")
+	claims, err := helper.GetTokenAndValidate(ctx)
+	if err != nil {
+		return err
+	}
 
-	db := database.DB.Model(&model.Session{}).Where("id = ?", sessionID).Delete(&session)
+	// expiredAt := time.Now().Add(time.Second * -1)
+	// sessionID := ctx.Cookies("session_id", "")
+	id := claims["id"].(string)
 
+	db := database.DB.Model(&model.Session{}).Where("id = ?", id).Delete(&session)
 	if db.Error != nil {
 		return ctx.Status(http.StatusConflict).JSON(response.Message{
 			Message: db.Error.Error(),
 		})
 	}
 
-	ctx.Cookie(&fiber.Cookie{
-		Name:    "session_id",
-		Value:   sessionID,
-		Expires: expiredAt,
-	})
+	// ctx.Cookie(&fiber.Cookie{
+	// 	Name:    "session_id",
+	// 	Value:   sessionID,
+	// 	Expires: expiredAt,
+	// })
 
 	return ctx.Status(http.StatusOK).JSON(response.Message{
 		Message: config.RES_LOGOUT,
@@ -251,9 +275,13 @@ func EmailVerififation(ctx *fiber.Ctx) error {
 
 func Check(ctx *fiber.Ctx) error {
 	var session model.Session
-	sessionID := ctx.Cookies("session_id", "")
 
-	db := database.DB.Model(&model.Session{}).Where("id", sessionID).Find(&session)
+	claims, err := helper.GetTokenAndValidate(ctx)
+	if err != nil {
+		return err
+	}
+
+	db := database.DB.Model(&model.Session{}).Where("id", claims["id"].(string)).Find(&session)
 
 	if db.Error != nil {
 		return ctx.Status(http.StatusConflict).JSON(response.Message{
@@ -278,11 +306,11 @@ func Check(ctx *fiber.Ctx) error {
 			})
 		}
 
-		ctx.Cookie(&fiber.Cookie{
-			Name:    "session_id",
-			Value:   session.UserID,
-			Expires: time.Now().Add(time.Second - 2000000000),
-		})
+		// ctx.Cookie(&fiber.Cookie{
+		// 	Name:    "session_id",
+		// 	Value:   session.UserID,
+		// 	Expires: time.Now().Add(time.Second - 2000000000),
+		// })
 
 		return ctx.Status(http.StatusUnauthorized).JSON(response.Message{
 			Message: config.RES_UNAUTHORIZED,

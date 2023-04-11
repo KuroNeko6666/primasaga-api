@@ -1,3 +1,3 @@
 package config
 
-var DATABASE_DSN string = "mareca:mareca_password@tcp(192.168.100.107:3306)/prisma_database?parseTime=true"
+var DATABASE_DSN string = "root:root@tcp(localhost:3306)/prima_database?parseTime=true"

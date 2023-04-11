@@ -7,5 +7,5 @@ import (
 
 func User(app *fiber.App) {
 	app.Get("/api/client/user", handler.GetUsers)
-	app.Get("/api/client/user/:id", handler.GetUsers)
+	app.Get("/api/client/user/:id", handler.GetUser)
 }

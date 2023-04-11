@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 
@@ -97,6 +98,7 @@ func CreatePost(ctx *fiber.Ctx) error {
 	}
 
 	files, r := helper.FilesUpload(rawFiles, "post-images", user)
+	fmt.Println(r)
 
 	if r != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(response.Message{
@@ -107,7 +109,8 @@ func CreatePost(ctx *fiber.Ctx) error {
 	for _, file := range files {
 		var postImage model.PostImage
 		postImage.Name = file.FileName
-		postImage.Url = "http://192.168.100.107:9090/post-images/" + file.FileName
+		// postImage.Url = "http://192.168.100.107:9090/post-images/" + file.FileName
+		postImage.Url = "http://192.168.100.9:9090/post-images/" + file.FileName // delete this soon
 		post.Images = append(post.Images, postImage)
 	}
 
@@ -130,7 +133,13 @@ func UpdatePost(ctx *fiber.Ctx) error {
 	var post model.Post
 	var user model.User
 
-	sessionID := ctx.Cookies("session_id")
+	claims, err := helper.GetTokenAndValidate(ctx)
+	if err != nil {
+		return err
+	}
+
+	// sessionID := ctx.Cookies("session_id")
+	sessionID := claims["id"].(string)
 	postID := ctx.Query("post_id")
 
 	if r := helper.GetUserLoggedIn(&user, sessionID); r != nil {

@@ -18,7 +18,12 @@ func Follow(ctx *fiber.Ctx) error {
 	var form form.Follow
 	var session model.Session
 	var follower model.Follower
-	sessionID := ctx.Cookies("session_id")
+	// sessionID := ctx.Cookies("session_id")
+
+	claims, err := helper.GetTokenAndValidate(ctx)
+	if err != nil {
+		return err
+	}
 
 	if r := ctx.BodyParser(&form); r != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(response.Message{
@@ -26,7 +31,8 @@ func Follow(ctx *fiber.Ctx) error {
 		})
 	}
 
-	session.ID = sessionID
+	// session.ID = sessionID
+	session.ID = claims["id"].(string)
 	following.ID = form.FollowingID
 
 	if r := database.DB.Model(&model.Session{}).Select("user_id").Find(&session); r.Error != nil {
