@@ -8,11 +8,16 @@ import (
 	"github.com/KuroNeko6666/prima-api/middleware"
 	"github.com/KuroNeko6666/prima-api/router"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func StartApp() {
 	//NEW APP
 	app := fiber.New()
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "*",
+	}))
 
 	//CONNECT DATABASE
 	database.DBConnect()

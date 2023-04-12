@@ -20,4 +20,7 @@ const (
 	RES_UNFOLLOWING = "unfollow successfully"
 	RES_LIKE        = "like successfully"
 	RES_UNLIKE      = "unlike successfully"
+
+	RES_USER_UPDATE = "user update successfully"
+	RES_USER_DELETE = "user delete successfully"
 )

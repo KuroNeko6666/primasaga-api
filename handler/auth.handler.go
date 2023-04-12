@@ -276,12 +276,17 @@ func EmailVerififation(ctx *fiber.Ctx) error {
 func Check(ctx *fiber.Ctx) error {
 	var session model.Session
 
-	claims, err := helper.GetTokenAndValidate(ctx)
-	if err != nil {
-		return err
+	header := ctx.Get("Authorization")
+	token := strings.ReplaceAll(header, "Bearer", "")
+	token = strings.ReplaceAll(token, " ", "")
+	if token == "" {
+		return ctx.Status(http.StatusOK).JSON(response.Message{Message: config.RES_MISSING_AUTH})
 	}
 
-	db := database.DB.Model(&model.Session{}).Where("id", claims["id"].(string)).Find(&session)
+	claims, _ := helper.ExtractClaims(token, config.SECRET_AUTH)
+	id := claims["id"].(string)
+
+	db := database.DB.Model(&model.Session{}).Where("id", id).Find(&session)
 
 	if db.Error != nil {
 		return ctx.Status(http.StatusConflict).JSON(response.Message{
