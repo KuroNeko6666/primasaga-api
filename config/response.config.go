@@ -21,6 +21,7 @@ const (
 	RES_LIKE        = "like successfully"
 	RES_UNLIKE      = "unlike successfully"
 
-	RES_USER_UPDATE = "user update successfully"
-	RES_USER_DELETE = "user delete successfully"
+	RES_USER_BAD_CREDETENTIALS = "bad user credentials"
+	RES_USER_UPDATE            = "user update successfully"
+	RES_USER_DELETE            = "user delete successfully"
 )

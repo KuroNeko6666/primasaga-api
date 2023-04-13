@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"sort"
@@ -183,8 +181,11 @@ func UpdateUser(ctx *fiber.Ctx) error {
 		Name:     form.Name,
 		Username: form.Username,
 	})
+
+	// error for credential at jwt token
+	// doesn't same with id at url param
 	if r.Error != nil {
-		log.Panic(r)
+		return ctx.Status(http.StatusUnauthorized).JSON(response.Message{Message: config.RES_USER_BAD_CREDETENTIALS})
 	}
 	if r.RowsAffected == 0 {
 		return ctx.Status(http.StatusOK).JSON(response.Base{
@@ -224,15 +225,14 @@ func DeleteUser(ctx *fiber.Ctx) error {
 		log.Panic(r)
 	}
 
-	re, _ := json.MarshalIndent(user, " ", "")
-	fmt.Println(string(re))
-
 	// query
 	id := ctx.Params("id")
-	fmt.Println(id)
 	r := database.DB.Model(&users).Where("id = ?", id).Delete(&user)
+
+	// error for credential at jwt token
+	// doesn't same with id at url param
 	if r.Error != nil {
-		log.Panic(r)
+		return ctx.Status(http.StatusUnauthorized).JSON(response.Message{Message: config.RES_USER_BAD_CREDETENTIALS})
 	}
 
 	if r.RowsAffected == 0 {
