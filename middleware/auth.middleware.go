@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -52,7 +51,6 @@ func Auth(ctx *fiber.Ctx) error {
 	remain := time.Until(session.ExpiredAt).String()
 
 	if strings.Contains(remain, "-") {
-		fmt.Println("sampe delete session")
 		db := db.Delete(&session)
 
 		if db.Error != nil {
@@ -71,7 +69,6 @@ func Auth(ctx *fiber.Ctx) error {
 			Message: config.RES_UNAUTHORIZED,
 		})
 	}
-
 	ctx.Locals("user", session.User)
 
 	return ctx.Next()

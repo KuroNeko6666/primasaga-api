@@ -70,6 +70,115 @@ func GetPost(ctx *fiber.Ctx) error {
 	})
 }
 
+func GetSelfPost(ctx *fiber.Ctx) error {
+	var user model.User
+	var resPosts []response.Posts
+	var posts []model.Post
+
+	search := ctx.Query("search", "")
+	limit := ctx.QueryInt("limit", 10)
+	offset := ctx.QueryInt("offset", 0)
+
+	// get local credentials
+	// from middleware token
+	copier.CopyWithOption(&user, ctx.Locals("user"), copier.Option{IgnoreEmpty: true})
+
+	// query get post
+	if r := database.DB.Model(&posts).
+		Preload("User").Preload("Images").
+		Preload("Comments", func(tx *gorm.DB) *gorm.DB {
+			return tx.Preload("User").Limit(5)
+		}).
+		Preload("Comments.SubComments", func(tx *gorm.DB) *gorm.DB {
+			return tx.Preload("User").Limit(5)
+		}).
+		Preload("Likes", func(tx *gorm.DB) *gorm.DB {
+			return tx.Limit(5)
+		}).
+		Where("caption LIKE ?", "%"+search+"%").Where("user_id = ?", user.ID).
+		Limit(limit).Offset(offset).
+		Find(&posts); r.Error != nil && r.RowsAffected == 0 {
+		return ctx.Status(http.StatusConflict).JSON(response.Message{
+			Message: r.Error.Error(),
+		})
+	}
+
+	for _, item := range posts {
+		var temp response.Posts
+		copier.CopyWithOption(&temp, item, copier.Option{IgnoreEmpty: true})
+		temp.LikeCount = database.DB.Model(&item).Association("Likes").Count()
+		temp.CommentCount = database.DB.Model(&item).Association("Comments").Count()
+		db := database.DB.Model(&model.Follower{}).Where("follower_id = ?", item.UserID).Where("following_id", user.ID).Find(&model.Follower{})
+		if db.RowsAffected == 0 {
+			temp.FollowStatus = "follow"
+		} else {
+			temp.FollowStatus = "followed"
+		}
+		resPosts = append(resPosts, temp)
+	}
+
+	sort.Slice(resPosts, func(i, j int) bool {
+		return resPosts[i].FollowStatus > resPosts[j].FollowStatus
+	})
+
+	return ctx.Status(http.StatusOK).JSON(response.Base{
+		Message: config.RES_FINE,
+		Data:    resPosts,
+	})
+}
+
+func GetFollowerPost(ctx *fiber.Ctx) error {
+	var user model.User
+	var resPosts []response.Posts
+	var posts []model.Post
+
+	search := ctx.Query("search", "")
+	limit := ctx.QueryInt("limit", 10)
+	offset := ctx.QueryInt("offset", 0)
+
+	copier.CopyWithOption(&user, ctx.Locals("user"), copier.Option{IgnoreEmpty: true})
+
+	if r := database.DB.Model(&posts).
+		Preload("User").Preload("Images").
+		Preload("Comments", func(tx *gorm.DB) *gorm.DB {
+			return tx.Preload("User").Limit(5)
+		}).
+		Preload("Comments.SubComments", func(tx *gorm.DB) *gorm.DB {
+			return tx.Preload("User").Limit(5)
+		}).
+		Preload("Likes", func(tx *gorm.DB) *gorm.DB {
+			return tx.Limit(5)
+		}).
+		Where("caption LIKE ?", "%"+search+"%").
+		Limit(limit).Offset(offset).
+		Not("user_id = ?", user.ID).Find(&posts); r.Error != nil && r.RowsAffected == 0 {
+		return ctx.Status(http.StatusConflict).JSON(response.Message{
+			Message: r.Error.Error(),
+		})
+	}
+
+	for _, item := range posts {
+		var temp response.Posts
+		copier.CopyWithOption(&temp, item, copier.Option{IgnoreEmpty: true})
+		temp.LikeCount = database.DB.Model(&item).Association("Likes").Count()
+		temp.CommentCount = database.DB.Model(&item).Association("Comments").Count()
+		db := database.DB.Model(&model.Follower{}).Where("following_id", item.User.ID).Find(&model.Follower{})
+		fmt.Print("\n\nitem:", item.User.ID, "\nuser:", user.ID)
+		if db.RowsAffected != 0 {
+			temp.FollowStatus = "followed"
+			resPosts = append(resPosts, temp)
+		}
+	}
+
+	sort.Slice(resPosts, func(i, j int) bool {
+		return resPosts[i].FollowStatus > resPosts[j].FollowStatus
+	})
+
+	return ctx.Status(http.StatusOK).JSON(response.Base{
+		Message: config.RES_FINE,
+		Data:    resPosts,
+	})
+}
 func CreatePost(ctx *fiber.Ctx) error {
 	var form form.Post
 	var post model.Post

@@ -17,6 +17,7 @@ func StartApp() {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "*",
+		AllowMethods: "*",
 	}))
 
 	//CONNECT DATABASE

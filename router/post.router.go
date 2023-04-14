@@ -7,6 +7,8 @@ import (
 
 func Post(app *fiber.App) {
 	app.Get("/api/client/post", handler.GetPost)
+	app.Get("/api/client/self/post", handler.GetSelfPost)         // temporary
+	app.Get("/api/client/follower/post", handler.GetFollowerPost) // temporary
 	app.Post("/api/client/post", handler.CreatePost)
 	app.Delete("/api/client/post", handler.DeletePost)
 	app.Put("/api/client/post", handler.UpdatePost)
